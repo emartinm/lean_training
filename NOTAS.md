@@ -72,7 +72,7 @@ Encontrar lemas y teoremas
 
 Generación de binarios
 ----------------------
-  - `$ lake build``
+  - `$ lake build`
   - Instrucciones en `lakefile.toml`
   - ¡Todo en el mismo lenguaje de Lean!
 
