@@ -33,22 +33,23 @@ match p with
   | Stmt.ifThenElse b p1 p2 =>
     if evalBExpr s b then big_step s p1 else big_step s p2
 
-def small_step (s: State) (p: Stmt) : (Stmt × State) :=
+def small_step (s: State) (p: Stmt) : (State × Option Stmt) :=
 match p with
-  | Stmt.skip => (Stmt.skip, s)
-  | Stmt.seq Stmt.skip p2 =>  (p2, s)
-  | Stmt.seq p1 p2 =>  let (p1', s') := small_step s p1
-                      (Stmt.seq p1' p2, s')
-  | Stmt.assign x v => (Stmt.assign x v, fun y => if y == x then v else s y)
+  | Stmt.skip => (s, none)
+  | Stmt.seq p1 p2 => let (s', optp1') := small_step s p1
+                      match optp1' with
+                        | none => (s', some p2)
+                        | some p1' => (s', some (Stmt.seq p1' p2))
+  | Stmt.assign x v => (fun y => if y == x then v else s y, none)
   | Stmt.ifThenElse b p1 p2 =>
-    if evalBExpr s b then (p1, s) else (p2, s)
+    if evalBExpr s b then (s, some p1) else (s, some p2)
 
 def eval_n (n: Nat) (s: State) (p: Stmt): State :=
 match n with
   | 0 => s
-  | Nat.succ n' => match p with
-                   | Stmt.skip => s
-                   | stmt => let (p', s') := small_step s stmt
-                             (eval_n n' s' p')
+  | Nat.succ n' => let (s', p') := small_step s p
+                   match p' with
+                   | none => s'
+                   | some p' => eval_n n' s' p'
 
 end LeanTraining.Semantics
